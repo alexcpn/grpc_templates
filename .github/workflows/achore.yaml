@@ -1,0 +1,15 @@
+name: Container Image CI
+on: [push,pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build the container image
+      run: cd grpc-go1.15 && make -f Makefile.baseimage && make in-docker
+    - uses: anchore/scan-action@v2
+      with:
+        image: "grpc-go:3.0"
+        fail-build: false
+    - name: grype scan JSON results
+      run: for j in `ls ./anchore-reports/*.json`; do echo "---- ${j} ----"; cat ${j}; echo; done
