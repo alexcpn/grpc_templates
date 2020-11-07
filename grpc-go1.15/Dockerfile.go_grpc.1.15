@@ -10,7 +10,6 @@ FROM golang:1.15.3-buster
 
 ENV  GO111MODULE on
 
-
 #https://github.com/golang/protobuf
 ENV GO_PB_VER v1.4.3
 # https://github.com/golang/protobuf/releases
@@ -25,7 +24,7 @@ ENV GRPC_VER v1.32.0
 
 
 ENV PB_URL https://github.com/google/protobuf/releases/download/v${PB_VER}/protoc-${PB_VER}-linux-x86_64.zip
-RUN apt-get update && apt-get install -y unzip  && mkdir -p /tmp/protoc && \
+RUN apt-get update && apt-get install -y `--no-install-recommends unzip  && mkdir -p /tmp/protoc && \
   curl -L ${PB_URL} > /tmp/protoc/protoc.zip && \
   cd /tmp/protoc && \
   unzip protoc.zip && \
@@ -34,6 +33,7 @@ RUN apt-get update && apt-get install -y unzip  && mkdir -p /tmp/protoc && \
   chmod go+rx /usr/local/bin/protoc && \
   cd /tmp && \
   rm -r /tmp/protoc && \
+  rm -rf /var/lib/apt/lists/*  && \
   go get google.golang.org/grpc@${GRPC_VER} && \
   go get github.com/golang/protobuf@${GO_PB_VER} && \
   go get github.com/golang/protobuf/protoc-gen-go@${PROTOC_GEN_GO_VER}

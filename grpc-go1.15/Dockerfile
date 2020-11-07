@@ -11,7 +11,7 @@ RUN make all
 
 ### Build a slim GRPC Go Container
 # final stage
-FROM alpine as final
+FROM alpine:3.12.1 as final
 WORKDIR /app
 
 # Copy the generated build binaries from previous step
