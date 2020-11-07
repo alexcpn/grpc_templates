@@ -47,7 +47,7 @@ in-docker:
 	DOCKER_BUILDKIT=1 docker build --build-arg  http_proxy=${HTTP_PROXY} \
 	 --build-arg https_proxy=${HTTP_PROXY} -f  Dockerfile --target=testresult --output out  $(CURRENTDIR) 
 	DOCKER_BUILDKIT=1 docker build --build-arg  http_proxy=${HTTP_PROXY} \
-	 --build-arg https_proxy=${HTTP_PROXY}  -t grpc-go:3.0 -f  Dockerfile --target=final  $(CURRENTDIR) 
+	 --build-arg https_proxy=${HTTP_PROXY}  -t grpc-go:3.0 -f  Dockerfile  $(CURRENTDIR) 
 
 	 echo " ---- Built grpc-go Docker Image -- grpc-go -----------"
 
