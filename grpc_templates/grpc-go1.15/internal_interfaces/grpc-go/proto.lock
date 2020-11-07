@@ -1,0 +1,95 @@
+{
+  "definitions": [
+    {
+      "protopath": "test.proto",
+      "def": {
+        "messages": [
+          {
+            "name": "SearchRequest",
+            "fields": [
+              {
+                "id": 1,
+                "name": "query",
+                "type": "string",
+                "options": [
+                  {
+                    "name": "(validate.rules).string",
+                    "aggregated": [
+                      {
+                        "name": "pattern",
+                        "value": "([A-Za-z]+) ([A-Za-z]+)*$"
+                      },
+                      {
+                        "name": "max_bytes",
+                        "value": "50"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": 2,
+                "name": "email_id",
+                "type": "string",
+                "options": [
+                  {
+                    "name": "(validate.rules).string.email",
+                    "value": "true"
+                  }
+                ]
+              },
+              {
+                "id": 3,
+                "name": "page_number",
+                "type": "int32"
+              },
+              {
+                "id": 4,
+                "name": "result_per_page",
+                "type": "int32"
+              }
+            ]
+          },
+          {
+            "name": "SearchResponse",
+            "fields": [
+              {
+                "id": 1,
+                "name": "search_response",
+                "type": "string"
+              },
+              {
+                "id": 2,
+                "name": "page_number",
+                "type": "int32"
+              },
+              {
+                "id": 3,
+                "name": "total_pages",
+                "type": "int32"
+              }
+            ]
+          }
+        ],
+        "services": [
+          {
+            "name": "SearchService",
+            "rpcs": [
+              {
+                "name": "Search",
+                "in_type": "SearchRequest",
+                "out_type": "SearchResponse"
+              }
+            ]
+          }
+        ],
+        "imports": [
+          {
+            "path": "validate/validate.proto"
+          }
+        ],
+        "package": {}
+      }
+    }
+  ]
+}
