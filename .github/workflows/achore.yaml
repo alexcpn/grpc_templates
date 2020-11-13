@@ -12,7 +12,6 @@ jobs:
     - uses: anchore/scan-action@v2
       with:
         image: "grpc-go:3.0"
-        fail-build: false
-        vulnerabilities: ./vulnerabilities.json
-    #- name: grype scan JSON results
-    #  run: for j in `ls ./anchore-reports/*.json`; do echo "---- ${j} ----"; cat ${j}; echo; done
+        fail-build: true
+    - name: grype scan JSON results
+      run: for j in `ls ./anchore-reports/*.json`; do echo "---- ${j} ----"; cat ${j}; echo; done
