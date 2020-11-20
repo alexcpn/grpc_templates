@@ -1,3 +1,9 @@
 grpc-go1.15/out/cover.out
 grpc-go1.15/out/server-lint.xml
 grpc-go1.15/out/unittest-result.xml
+
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore Gradle build output directory
+build
