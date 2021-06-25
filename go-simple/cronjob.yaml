@@ -1,0 +1,16 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: go-simple
+  namespace: test-efk
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: go-simple
+            image: alexcpn/simple-go:1.0
+            imagePullPolicy: IfNotPresent
+          restartPolicy: OnFailure
