@@ -1,0 +1,126 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: fluentd
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: fluentd
+  namespace: kube-system
+rules:
+rules:
+- apiGroups: [""] # "" indicates the core API group
+  resources: ["pods","namespaces"]
+  verbs: ["get", "watch", "list"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: fluentd
+roleRef:
+  kind: ClusterRole
+  name: fluentd
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+- kind: ServiceAccount
+  name: fluentd
+  namespace: kube-system
+---
+# fluentd-kubernetes-daemonset/fluentd-daemonset-elasticsearch.yaml + added the service account
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluentd
+  namespace: kube-system
+  labels:
+    k8s-app: fluentd-logging
+    version: v1
+spec:
+  selector:
+    matchLabels:
+      k8s-app: fluentd-logging
+      version: v1
+  template:
+    metadata:
+      labels:
+        k8s-app: fluentd-logging
+        version: v1
+    spec:
+      serviceAccount: fluentd
+      serviceAccountName: "fluentd"
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+# https://github.com/fluent/fluentd-kubernetes-daemonset/pull/349#issuecomment-579097659
+      initContainers:
+      - name: config-fluentd
+        image: busybox
+        imagePullPolicy: IfNotPresent
+        command: ["/bin/sh","-c"]
+        args:
+        - cp /fluentd/etc2/fluent.conf /fluentd/etc/fluent.conf;
+          cp /fluentd/etc2/kubernetes.conf /fluentd/etc/kubernetes.conf;
+          echo "Done copying"
+          echo
+          echo $(cat /fluentd/etc/fluent.conf)
+          echo
+          echo $(cat /fluentd/etc/kubernetes.conf)
+        volumeMounts:
+        - name: config-path
+          mountPath: /fluentd/etc
+        - name: config-source
+          mountPath: /fluentd/etc2
+      containers:
+      - name: fluentd
+        image: fluent/fluentd-kubernetes-daemonset:v1.12-debian-elasticsearch7-1
+        #fluent/fluentd-kubernetes-daemonset:elasticsearch
+        env:
+        - name:  FLUENT_ELASTICSEARCH_HOST
+          #value: "elasticsearch-master"
+          value: "10.124.14.29"
+        - name:  FLUENT_ELASTICSEARCH_PORT
+          value: "9200"
+        - name: FLUENT_ELASTICSEARCH_SCHEME
+          value: "http"
+        - name: FLUENT_UID
+          value: "0"
+        #https://github.com/fluent/fluentd-kubernetes-daemonset/issues/434#issuecomment-752813739  
+        - name: FLUENT_CONTAINER_TAIL_EXCLUDE_PATH
+          value: /var/log/containers/fluent*
+        - name: FLUENT_CONTAINER_TAIL_PARSER_TYPE
+          value: /^(?<time>.+) (?<stream>stdout|stderr)( (?<logtag>.))? (?<log>.*)$/
+        # X-Pack Authentication
+        # =====================
+        - name: FLUENT_ELASTICSEARCH_USER
+          value: "elastic"
+        - name: FLUENT_ELASTICSEARCH_PASSWORD
+          value: "changeme"
+        resources:
+          limits:
+            memory: 200Mi
+          requests:
+            cpu: 100m
+            memory: 200Mi
+        volumeMounts:
+        - name: config-path
+          mountPath: /fluentd/etc
+        - name: varlog
+          mountPath: /var/log
+        - name: varlibdockercontainers
+          mountPath: /var/lib/docker/containers
+          readOnly: true
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: varlog
+        hostPath:
+          path: /var/log
+      - name: varlibdockercontainers
+        hostPath:
+          path: /var/lib/docker/containers
+      - name: config-source
+        configMap:
+          name: fluentd-config
+      - name: config-path
+        emptyDir: {}
