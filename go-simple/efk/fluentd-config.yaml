@@ -61,10 +61,30 @@ data:
       #  time_format %Y-%m-%dT%H:%M:%S.%NZ
       #</parse>
       #https://github.com/fluent/fluentd-kubernetes-daemonset/issues/434#issuecomment-831801690
+      emit_invalid_record_to_error true
       <parse>
         @type cri
+        <parse>
+          @type json
+        </parse>
       </parse>
+      #tag backend.application
     </source>
+
+    <match kubernetes.var.log.containers.elasticsearch-kibana-**> #ignore from this container
+      @type null
+    </match>
+    
+    <filter kubernetes.var.log.containers.**>
+      @type grep
+      emit_invalid_record_to_error false
+      <exclude>
+        key severity
+        pattern /INFO/
+      </exclude>
+      tag info.logs
+    </filter>
+
     <source>
       @type tail
       @id in_tail_minion
