@@ -63,26 +63,54 @@ data:
       #https://github.com/fluent/fluentd-kubernetes-daemonset/issues/434#issuecomment-831801690
       <parse>
         @type cri
+        #<parse> # this will parse the neseted feilds properly - like message in JSON; but if mesage is not in json then this is lost
+        #  @type json 
+        #</parse>
       </parse>
+      #emit_invalid_record_to_error # when nested logging fails, see if we can parse via JSON
       #tag backend.application
     </source>
+
+
+    <label @ERROR> # when nested logs fail this is not working
+      <filter **>
+        @type parser
+        key_name message
+        <parse>
+          @type none
+        </parse>
+      </filter>
+      <match kubernetes.var.log.containers.elasticsearch-kibana-**> #ignore from this container
+        @type null
+      </match>
+    </label>
+
 
     <match kubernetes.var.log.containers.elasticsearch-kibana-**> #ignore from this container
       @type null
     </match>
-    
-    <filter kubernetes.var.log.containers.**>
-      @type grep
-      <exclude>
-        key severity
-        pattern /INFO/
-      </exclude>
-      <exclude>
-        key message
-        pattern /INFO/
-      </exclude>
-      tag info.logs
-    </filter>
+
+    #<filter backend.application> # works but with nested JSON - k8s labels like pod names are lost
+    #  @type record_transformer
+    #  reserve_data true
+    #  enable_ruby
+    #  <record>
+    #    severity ${ if record["message"].include? "INFO" then "INFO" elsif record["message"].include? "WARNING" then "WARNING"  end}
+    #  </record>
+    #</filter>
+
+     <filter kubernetes.var.log.containers.**> #exlcude logs with severity , or having message with INFO out
+       @type grep
+       <exclude>
+         key severity
+         pattern /INFO/
+       </exclude>
+       <exclude>
+         key message
+         pattern /INFO/
+       </exclude>
+       tag info.logs
+     </filter>
 
     <source>
       @type tail
